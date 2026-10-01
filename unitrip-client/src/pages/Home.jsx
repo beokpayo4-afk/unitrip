@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { CheckCircle2, FileText, MapPin, Shield, Smartphone } from "lucide-react";
 import { catalogApi } from "@/api/client";
+import { isPublicCategory } from "@/utils/categories";
 import { formatINR } from "@/utils/format";
 import { destinationImage } from "@/utils/destinationImages";
 import { Button } from "@/components/ui/button";
@@ -111,7 +112,7 @@ export default function Home() {
   const featured = packages.slice(0, 4);
   const newest = [...packages].slice(0, 4);
   const experienceCount = packages.length;
-  const topicCount = categories.length || 0;
+  const topicCount = categories.filter(isPublicCategory).length || 0;
   const destCount = destinations.length;
 
   return (

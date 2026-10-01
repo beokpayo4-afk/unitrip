@@ -4,32 +4,65 @@ import {
   Camera,
   Car,
   ChevronDown,
+  Hotel,
   Landmark,
+  Luggage,
   Mountain,
   Plane,
   PackageSearch,
   Globe2,
   Ship,
+  Sun,
   Train,
-  Waves,
   ArrowRight,
 } from "lucide-react";
 import { catalogApi } from "@/api/client";
+import { isPublicCategory } from "@/utils/categories";
 import { cn } from "@/lib/utils";
 
 const CATEGORY_ICONS = {
   "city-cultural-tours": Camera,
-  "car-charters": Car,
-  "water-sports": Waves,
-  "attractions-tickets": Landmark,
   "private-transfers": Car,
-  "luxury-rail": Train,
-  "air-tours": Plane,
   "adventure-safari": Mountain,
   "international-tours": Ship,
 };
 
 const EXTRA_LINKS = [
+  {
+    key: "flights",
+    to: "/flights",
+    title: "Flights",
+    subtitle: "Book flights",
+    Icon: Plane,
+  },
+  {
+    key: "hotels",
+    to: "/hotels",
+    title: "Hotels",
+    subtitle: "Find a stay",
+    Icon: Hotel,
+  },
+  {
+    key: "trains",
+    to: "/trains",
+    title: "Trains",
+    subtitle: "Book train tickets",
+    Icon: Train,
+  },
+  {
+    key: "holiday-packages",
+    to: "/holiday-packages",
+    title: "Holiday Packages",
+    subtitle: "Ready-made holidays",
+    Icon: Sun,
+  },
+  {
+    key: "travel-packages",
+    to: "/travel-packages",
+    title: "Travel Packages",
+    subtitle: "Plan a full trip",
+    Icon: Luggage,
+  },
   {
     key: "international",
     to: "/packages?scope=international",
@@ -90,7 +123,7 @@ export default function CategoriesMegaMenu({ mobile = false, onNavigate }) {
       )}
     >
       <div className="grid gap-1 p-3 sm:grid-cols-2">
-        {categories.map((cat) => {
+        {categories.filter(isPublicCategory).map((cat) => {
           const Icon = iconFor(cat.slug);
           return (
             <Link

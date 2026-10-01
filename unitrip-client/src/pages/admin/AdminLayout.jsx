@@ -2,14 +2,22 @@ import { useState } from "react";
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
   BookOpen,
+  ClipboardList,
   FolderTree,
   HelpCircle,
+  Hotel,
   LayoutDashboard,
   LogOut,
+  Luggage,
+  MapPin,
   Menu,
   Package,
+  Plane,
   Plus,
+  Route,
   ScrollText,
+  Sun,
+  Train,
   X,
 } from "lucide-react";
 import { RequireAdmin } from "@/components/ProtectedRoute";
@@ -17,40 +25,79 @@ import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-const links = [
-  { to: "/admin", label: "Dashboard", end: true, icon: LayoutDashboard },
-  { to: "/admin/packages", label: "Packages", icon: Package },
-  { to: "/admin/categories", label: "Categories", icon: FolderTree },
-  { to: "/admin/faqs", label: "Global FAQs", icon: HelpCircle },
-  { to: "/admin/bookings", label: "Bookings", icon: BookOpen },
-  { to: "/admin/logs", label: "Logs", icon: ScrollText },
+const groups = [
+  {
+    label: "Overview",
+    links: [{ to: "/admin", label: "Dashboard", end: true, icon: LayoutDashboard }],
+  },
+  {
+    label: "Packages",
+    links: [
+      { to: "/admin/packages", label: "Packages", icon: Package },
+      { to: "/admin/packages/new", label: "Add package", icon: Plus },
+      { to: "/admin/categories", label: "Categories", icon: FolderTree },
+      { to: "/admin/destinations", label: "Destinations", icon: MapPin },
+      { to: "/admin/itineraries", label: "Itineraries", icon: Route },
+      { to: "/admin/holiday-packages", label: "Holiday packages", icon: Sun },
+    ],
+  },
+  {
+    label: "Bookings",
+    links: [
+      { to: "/admin/bookings", label: "Experience bookings", end: true, icon: BookOpen },
+      { to: "/admin/bookings/flights", label: "Flight bookings", icon: Plane },
+      { to: "/admin/bookings/hotels", label: "Hotel bookings", icon: Hotel },
+      { to: "/admin/bookings/trains", label: "Train bookings", icon: Train },
+      { to: "/admin/bookings/holidays", label: "Holiday bookings", icon: Luggage },
+    ],
+  },
+  {
+    label: "Travel enquiries",
+    links: [{ to: "/admin/trip-requests", label: "Custom travel requests", icon: ClipboardList }],
+  },
+  {
+    label: "Other",
+    links: [
+      { to: "/admin/faqs", label: "Global FAQs", icon: HelpCircle },
+      { to: "/admin/logs", label: "Logs", icon: ScrollText },
+    ],
+  },
 ];
 
 function NavItems({ onNavigate }) {
   return (
-    <nav className="flex flex-col gap-1">
-      {links.map((l) => {
-        const Icon = l.icon;
-        return (
-          <NavLink
-            key={l.to}
-            to={l.to}
-            end={l.end}
-            onClick={onNavigate}
-            className={({ isActive }) =>
-              cn(
-                "group flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                isActive &&
-                  "bg-sidebar-accent text-sidebar-accent-foreground shadow-[inset_3px_0_0_0_var(--sidebar-primary)]"
-              )
-            }
-          >
-            <Icon className="size-4 shrink-0 opacity-80" />
-            {l.label}
-          </NavLink>
-        );
-      })}
+    <nav className="flex flex-col gap-4">
+      {groups.map((group) => (
+        <div key={group.label}>
+          <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wide text-sidebar-foreground/50">
+            {group.label}
+          </p>
+          <div className="flex flex-col gap-1">
+            {group.links.map((l) => {
+              const Icon = l.icon;
+              return (
+                <NavLink
+                  key={l.to}
+                  to={l.to}
+                  end={l.end}
+                  onClick={onNavigate}
+                  className={({ isActive }) =>
+                    cn(
+                      "group flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                      "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                      isActive &&
+                        "bg-sidebar-accent text-sidebar-accent-foreground shadow-[inset_3px_0_0_0_var(--sidebar-primary)]"
+                    )
+                  }
+                >
+                  <Icon className="size-4 shrink-0 opacity-80" />
+                  {l.label}
+                </NavLink>
+              );
+            })}
+          </div>
+        </div>
+      ))}
     </nav>
   );
 }

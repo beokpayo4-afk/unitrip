@@ -21,7 +21,7 @@ export async function api(path, options = {}) {
   });
 
   const text = await res.text();
-  let data = null;
+  let data;
   try {
     data = text ? JSON.parse(text) : null;
   } catch {
@@ -158,6 +158,46 @@ export const adminApi = {
     api(`/api/bookings/admin/${id}`, {
       method: "PATCH",
       body: JSON.stringify(body),
+    }),
+
+  tripEnquiries: () => api("/api/trip-enquiries/admin/all"),
+  tripEnquiry: (id) => api(`/api/trip-enquiries/admin/${id}`),
+  updateTripEnquiry: (id, body) =>
+    api(`/api/trip-enquiries/admin/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(body),
+    }),
+
+  moduleBookings: (type) => api(`/api/module-bookings/admin/all?type=${encodeURIComponent(type)}`),
+  moduleBooking: (id) => api(`/api/module-bookings/admin/${id}`),
+  updateModuleBooking: (id, body) =>
+    api(`/api/module-bookings/admin/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(body),
+    }),
+
+  holidayPackages: () => api("/api/holiday-packages/admin/all"),
+  holidayPackage: (id) => api(`/api/holiday-packages/admin/${id}`),
+  createHolidayPackage: (body) =>
+    api("/api/holiday-packages", { method: "POST", body: JSON.stringify(body) }),
+  updateHolidayPackage: (id, body) =>
+    api(`/api/holiday-packages/${id}`, { method: "PUT", body: JSON.stringify(body) }),
+  deleteHolidayPackage: (id) => api(`/api/holiday-packages/${id}`, { method: "DELETE" }),
+  publishHolidayPackage: (id, published) =>
+    api(`/api/holiday-packages/${id}/published`, {
+      method: "PATCH",
+      body: JSON.stringify({ published }),
+    }),
+  seedHolidayPackages: (packages) =>
+    api("/api/holiday-packages/admin/seed", {
+      method: "POST",
+      body: JSON.stringify({ packages }),
+    }),
+
+  setPackageVisibility: (id, isActive) =>
+    api(`/api/packages/${id}/visibility`, {
+      method: "PATCH",
+      body: JSON.stringify({ isActive }),
     }),
 
   stats: () => api("/api/admin/stats"),

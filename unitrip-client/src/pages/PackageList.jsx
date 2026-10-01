@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { catalogApi } from "@/api/client";
+import { isPublicCategory } from "@/utils/categories";
 import { formatINR } from "@/utils/format";
 import { placeImage } from "@/utils/placeImages";
 import { Badge } from "@/components/ui/badge";
@@ -191,7 +192,7 @@ export default function PackageList() {
               onChange={(e) => updateFilter("category", e.target.value)}
             >
               <option value="">All categories</option>
-              {categories.map((c) => (
+              {categories.filter(isPublicCategory).map((c) => (
                 <option key={c._id} value={c._id}>
                   {c.name}
                 </option>

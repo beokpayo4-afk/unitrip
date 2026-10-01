@@ -58,6 +58,17 @@ export default function AdminPackages() {
     return () => clearTimeout(t);
   }, [search, city, active, load]);
 
+  async function handleVisibility(pkg, isActive) {
+    try {
+      await adminApi.setPackageVisibility(pkg._id, isActive);
+      toastSuccess(isActive ? "Package published" : "Package unpublished");
+      await load();
+    } catch (err) {
+      toastError(err.message || "Could not change visibility");
+      setError(err.message);
+    }
+  }
+
   async function handleDelete(id) {
     if (
       !confirm(
@@ -179,6 +190,14 @@ export default function AdminPackages() {
                         <TableCell className="text-right">
                           <AdminRowActions>
                             <AdminEditButton href={`/admin/packages/${pkg._id}`} />
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleVisibility(pkg, hidden)}
+                            >
+                              {hidden ? "Publish" : "Unpublish"}
+                            </Button>
                             {!hidden && (
                               <AdminDeleteButton
                                 label="Hide"

@@ -424,6 +424,24 @@ export const updatePackage = asyncHandler(async (req, res) => {
   res.json(populated);
 });
 
+export const setPackageVisibility = asyncHandler(async (req, res) => {
+  const pkg = await Package.findById(req.params.id);
+  if (!pkg) return res.status(404).json({ message: "Package not found" });
+  const isActive = Boolean(req.body?.isActive);
+  pkg.isActive = isActive;
+  pkg.deletedAt = isActive ? null : pkg.deletedAt || new Date();
+  await pkg.save();
+  const populated = await Package.findById(pkg._id).populate("category", "name slug");
+  await audit({
+    level: "info",
+    action: isActive ? "package.publish" : "package.unpublish",
+    message: `${isActive ? "Published" : "Unpublished"} package "${pkg.title}"`,
+    meta: { packageId: String(pkg._id), isActive },
+    actor: req.user,
+  });
+  res.json(populated);
+});
+
 export const deletePackage = asyncHandler(async (req, res) => {
   const pkg = await Package.findById(req.params.id);
   if (!pkg) {
