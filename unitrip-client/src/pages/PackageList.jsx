@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { catalogApi } from "@/api/client";
 import { formatINR } from "@/utils/format";
+import { placeImage } from "@/utils/placeImages";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -21,8 +22,18 @@ function PlaceGrid({ places, emptyLabel }) {
         <Link
           key={`${place.packageSlug}-${place.name}`}
           to={`/packages/${place.packageSlug}`}
-          className="group border-b border-border pb-3 transition-colors hover:border-foreground"
+          className="group overflow-hidden rounded-xl border border-border bg-card transition-colors hover:border-foreground"
         >
+          <img
+            src={placeImage(place)}
+            alt={place.name}
+            className="h-36 w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            onError={(e) => {
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = placeImage({ ...place, name: "" });
+            }}
+          />
+          <div className="p-3">
           <div className="flex items-start justify-between gap-2">
             <h3 className="font-display text-base font-semibold group-hover:underline">
               {place.name}
@@ -45,6 +56,7 @@ function PlaceGrid({ places, emptyLabel }) {
           <p className="mt-1 text-xs text-muted-foreground/80">
             Via {place.packageTitle}
           </p>
+          </div>
         </Link>
       ))}
     </div>
