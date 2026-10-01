@@ -18,6 +18,7 @@ import adminRoutes from "./routes/admin.js";
 import tripEnquiryRoutes from "./routes/tripEnquiries.js";
 import moduleBookingRoutes from "./routes/moduleBookings.js";
 import holidayPackageRoutes from "./routes/holidayPackages.js";
+import integrationRoutes from "./routes/integrations.js";
 import { UPLOADS_ROOT } from "./utils/storage.js";
 
 dotenv.config();
@@ -80,6 +81,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/trip-enquiries", tripEnquiryRoutes);
 app.use("/api/module-bookings", moduleBookingRoutes);
 app.use("/api/holiday-packages", holidayPackageRoutes);
+app.use("/api/integrations", integrationRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

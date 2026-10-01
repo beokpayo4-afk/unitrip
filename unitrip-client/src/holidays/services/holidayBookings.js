@@ -34,6 +34,15 @@ export async function saveHolidayBooking(booking) {
   return record;
 }
 
+export function replaceHolidayBooking(booking) {
+  const items = read(BOOKING_KEY);
+  const next = items.some((item) => item.reference === booking.reference)
+    ? items.map((item) => (item.reference === booking.reference ? booking : item))
+    : [booking, ...items];
+  write(BOOKING_KEY, next);
+  return booking;
+}
+
 export function listHolidayBookings() {
   return read(BOOKING_KEY);
 }

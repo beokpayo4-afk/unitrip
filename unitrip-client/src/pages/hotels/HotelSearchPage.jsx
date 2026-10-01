@@ -10,8 +10,8 @@ export default function HotelSearchPage() {
   const [errors, setErrors] = useState({});
   const navigate = useNavigate();
 
-  function onSubmit() {
-    const nextErrors = submitSearch();
+  async function onSubmit() {
+    const nextErrors = await submitSearch();
     if (nextErrors) {
       setErrors(nextErrors);
       return;

@@ -61,6 +61,25 @@ export const getModuleBooking = asyncHandler(async (req, res) => {
   res.json(booking);
 });
 
+export const cancelModuleBooking = asyncHandler(async (req, res) => {
+  const reference = String(req.params.reference || "").trim().toUpperCase();
+  const booking = await ModuleBooking.findOne({ reference });
+  if (!booking) return res.status(404).json({ message: "Booking not found" });
+  if (booking.status === "completed") {
+    return res.status(409).json({ message: "Completed bookings stay on record." });
+  }
+  booking.status = "cancelled";
+  await booking.save();
+  await audit({
+    level: "info",
+    action: "moduleBooking.cancel",
+    message: `${booking.reference} cancelled`,
+    meta: { reference: booking.reference, type: booking.type },
+    actor: req.user,
+  });
+  res.json({ reference: booking.reference, status: booking.status });
+});
+
 export const updateModuleBooking = asyncHandler(async (req, res) => {
   const booking = await ModuleBooking.findById(req.params.id);
   if (!booking) return res.status(404).json({ message: "Booking not found" });

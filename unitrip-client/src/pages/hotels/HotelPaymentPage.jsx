@@ -3,12 +3,10 @@ import { Navigate, useNavigate } from "react-router-dom";
 import { useHotelBooking } from "@/hotels/context/bookingContext";
 import { HotelPaymentPanel } from "@/hotels/components/HotelPaymentPanel";
 import { HotelStepper } from "@/hotels/components/HotelStepper";
-import { createHotelReference, saveHotelBooking } from "@/hotels/services/hotelBookings";
-import { hotelPayment } from "@/hotels/services/hotelPayment";
 import { selectedStay } from "@/hotels/services/hotelSearch";
 
 export default function HotelPaymentPage() {
-  const { draft } = useHotelBooking();
+  const { draft, completeBooking } = useHotelBooking();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
@@ -18,36 +16,12 @@ export default function HotelPaymentPage() {
   async function onContinue() {
     setBusy(true);
     setError("");
-    const payment = await hotelPayment.startCheckout({
-      amount: room.price.total,
-      currency: room.price.currency,
-    });
-    const booking = {
-      reference: createHotelReference(),
-      status: "payment_pending",
-      statusLabel: "Payment pending — no charge made",
-      payment,
-      createdAt: new Date().toISOString(),
-      search: draft.search,
-      hotel: {
-        id: hotel.id,
-        name: hotel.name,
-        city: hotel.city,
-        area: hotel.area,
-        stars: hotel.stars,
-      },
-      room: {
-        id: room.id,
-        name: room.name,
-        bedType: room.bedType,
-        meals: room.meals,
-        cancellation: room.cancellation,
-      },
-      guest: draft.guest,
-      fare: room.price,
-    };
     try {
-      const saved = await saveHotelBooking(booking);
+      const saved = await completeBooking();
+      if (!saved) {
+        setBusy(false);
+        return;
+      }
       navigate(`/hotels/confirmation/${saved.reference}`);
     } catch (err) {
       setError(err.message || "The booking was not saved.");

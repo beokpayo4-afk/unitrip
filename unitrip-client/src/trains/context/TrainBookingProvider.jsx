@@ -1,6 +1,11 @@
 import { useMemo, useState } from "react";
+import { notificationService } from "@/services/notificationService";
+import { paymentService } from "@/services/paymentService";
+import { trainService } from "@/services/trainService";
 import { localISODate } from "../utils/time";
-import { trainInventory } from "../services/trainInventory";
+import { quoteTrain } from "../services/pricing";
+import { buildSampleBooking } from "../services/trainBookings";
+import { selectedJourney } from "../services/trainSearch";
 import { validateTrainSearch } from "../validation/trainSearch";
 import { emptyPassenger } from "../validation/passengers";
 import { TrainBookingContext } from "./bookingContext";
@@ -61,7 +66,7 @@ export function TrainBookingProvider({ children }) {
     async function submitSearch() {
       const errors = validateTrainSearch(draft.search);
       if (Object.keys(errors).length > 0) return errors;
-      const result = await trainInventory.search(draft.search);
+      const result = await trainService.search(draft.search);
       write({
         ...draft,
         searched: true,
@@ -85,7 +90,47 @@ export function TrainBookingProvider({ children }) {
       write({ ...draft, passengers });
     }
 
-    return { draft, setSearch, submitSearch, selectTrain, setPassengers };
+    async function completeBooking() {
+      const { train, travelClass } = selectedJourney(draft);
+      if (!train || !travelClass) return null;
+      const fare = quoteTrain({
+        fare: travelClass.fare,
+        passengers: draft.passengers.length,
+        quota: draft.search.quota,
+      });
+      const payment = await paymentService.createBooking({
+        amount: fare.total,
+        currency: fare.currency,
+        product: "train",
+      });
+      const saved = await trainService.createBooking(
+        buildSampleBooking({
+          payment,
+          search: draft.search,
+          train: { name: train.name, number: train.number, type: train.type },
+          journey: {
+            from: train.from.name,
+            to: train.to.name,
+            departure: train.from.departure,
+            arrival: train.to.arrival,
+            date: draft.search.journeyDate,
+            classCode: travelClass.code,
+            quota: draft.search.quota,
+          },
+          passengers: draft.passengers,
+          fare,
+        })
+      );
+      await notificationService.createBooking({
+        product: "train",
+        reference: saved.reference,
+        email: draft.passengers?.[0]?.email || "",
+        title: "Train request saved",
+      });
+      return saved;
+    }
+
+    return { draft, setSearch, submitSearch, selectTrain, setPassengers, completeBooking };
   }, [draft]);
 
   return <TrainBookingContext.Provider value={api}>{children}</TrainBookingContext.Provider>;

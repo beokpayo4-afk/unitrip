@@ -2,7 +2,7 @@ import { use } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Star } from "lucide-react";
 import PackageGallery from "@/holidays/components/PackageGallery";
-import { holidayPackagePromise } from "@/holidays/services/holidayCatalog";
+import { packageDetailsPromise } from "@/services/packageService";
 import { whatsappEnquiryUrl } from "@/holidays/services/holidayBookings";
 import { formatINR } from "@/utils/format";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -22,7 +22,7 @@ function BulletList({ items }) {
 
 export default function HolidayDetailPage() {
   const { slug } = useParams();
-  const travelPackage = use(holidayPackagePromise(slug));
+  const travelPackage = use(packageDetailsPromise(slug));
 
   if (!travelPackage) {
     return (

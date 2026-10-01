@@ -1,6 +1,9 @@
 import { useMemo, useState } from "react";
+import { flightService } from "@/services/flightService";
+import { notificationService } from "@/services/notificationService";
+import { paymentService } from "@/services/paymentService";
+import { createReference } from "../services/flightBookings";
 import { localISODate } from "../utils/time";
-import { searchFlights } from "../services/flightSearch";
 import { blankPassengers } from "../validation/passengers";
 import { validateSearch } from "../validation/flightSearch";
 import { FlightBookingContext } from "./bookingContext";
@@ -68,17 +71,46 @@ export function FlightBookingProvider({ children }) {
       write({ ...draft, search });
     }
 
-    function submitSearch() {
+    async function submitSearch() {
       const errors = validateSearch(draft.search);
       if (Object.keys(errors).length > 0) return errors;
+      const result = await flightService.search(draft.search);
       write({
         ...draft,
         searched: true,
-        result: searchFlights(draft.search),
+        result,
         selectedOffer: null,
         passengers: blankPassengers(draft.search),
       });
       return null;
+    }
+
+    async function completeBooking() {
+      const offer = draft.selectedOffer;
+      if (!offer) return null;
+      const payment = await paymentService.createBooking({
+        amount: offer.price.total,
+        currency: offer.price.currency,
+        product: "flight",
+      });
+      const saved = await flightService.createBooking({
+        reference: createReference(),
+        status: "payment_pending",
+        statusLabel: "Payment pending — no charge made",
+        payment,
+        createdAt: new Date().toISOString(),
+        search: draft.search,
+        offer,
+        passengers: draft.passengers,
+        fare: offer.price,
+      });
+      await notificationService.createBooking({
+        product: "flight",
+        reference: saved.reference,
+        email: draft.passengers?.[0]?.email || "",
+        title: "Flight request saved",
+      });
+      return saved;
     }
 
     function selectOffer(offer) {
@@ -89,7 +121,7 @@ export function FlightBookingProvider({ children }) {
       write({ ...draft, passengers });
     }
 
-    return { draft, setSearch, submitSearch, selectOffer, setPassengers };
+    return { draft, setSearch, submitSearch, selectOffer, setPassengers, completeBooking };
   }, [draft]);
 
   return (

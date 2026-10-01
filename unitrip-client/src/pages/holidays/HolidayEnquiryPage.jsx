@@ -1,7 +1,7 @@
 import { use, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useHolidayBooking } from "@/holidays/context/bookingContext";
-import { holidayPackagePromise } from "@/holidays/services/holidayCatalog";
+import { packageDetailsPromise } from "@/services/packageService";
 import { validateHolidayEnquiry } from "@/holidays/validation/booking";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 export default function HolidayEnquiryPage() {
   const { slug } = useParams();
-  const travelPackage = use(holidayPackagePromise(slug));
+  const travelPackage = use(packageDetailsPromise(slug));
   const { submitEnquiry } = useHolidayBooking();
   const [form, setForm] = useState({
     name: "",

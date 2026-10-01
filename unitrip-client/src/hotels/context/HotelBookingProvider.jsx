@@ -1,6 +1,10 @@
 import { useMemo, useState } from "react";
+import { hotelService } from "@/services/hotelService";
+import { notificationService } from "@/services/notificationService";
+import { paymentService } from "@/services/paymentService";
 import { localISODate } from "../utils/dates";
-import { searchHotels } from "../services/hotelSearch";
+import { createHotelReference } from "../services/hotelBookings";
+import { selectedStay } from "../services/hotelSearch";
 import { validateHotelSearch } from "../validation/hotelSearch";
 import { emptyGuest } from "../validation/guest";
 import { HotelBookingContext } from "./bookingContext";
@@ -61,18 +65,60 @@ export function HotelBookingProvider({ children }) {
       write({ ...draft, search });
     }
 
-    function submitSearch() {
+    async function submitSearch() {
       const errors = validateHotelSearch(draft.search);
       if (Object.keys(errors).length > 0) return errors;
+      const result = await hotelService.search(draft.search);
       write({
         ...draft,
         searched: true,
-        result: searchHotels(draft.search),
+        result,
         selectedHotelId: null,
         selectedRoomId: null,
         guest: emptyGuest(draft.search),
       });
       return null;
+    }
+
+    async function completeBooking() {
+      const { hotel, room } = selectedStay(draft);
+      if (!hotel || !room) return null;
+      const payment = await paymentService.createBooking({
+        amount: room.price.total,
+        currency: room.price.currency,
+        product: "hotel",
+      });
+      const saved = await hotelService.createBooking({
+        reference: createHotelReference(),
+        status: "payment_pending",
+        statusLabel: "Payment pending — no charge made",
+        payment,
+        createdAt: new Date().toISOString(),
+        search: draft.search,
+        hotel: {
+          id: hotel.id,
+          name: hotel.name,
+          city: hotel.city,
+          area: hotel.area,
+          stars: hotel.stars,
+        },
+        room: {
+          id: room.id,
+          name: room.name,
+          bedType: room.bedType,
+          meals: room.meals,
+          cancellation: room.cancellation,
+        },
+        guest: draft.guest,
+        fare: room.price,
+      });
+      await notificationService.createBooking({
+        product: "hotel",
+        reference: saved.reference,
+        email: draft.guest?.email || "",
+        title: "Hotel request saved",
+      });
+      return saved;
     }
 
     function selectHotel(hotelId) {
@@ -87,7 +133,7 @@ export function HotelBookingProvider({ children }) {
       write({ ...draft, guest });
     }
 
-    return { draft, setSearch, submitSearch, selectHotel, selectRoom, setGuest };
+    return { draft, setSearch, submitSearch, selectHotel, selectRoom, setGuest, completeBooking };
   }, [draft]);
 
   return <HotelBookingContext.Provider value={api}>{children}</HotelBookingContext.Provider>;

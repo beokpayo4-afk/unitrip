@@ -3,12 +3,13 @@ import { Link } from "react-router-dom";
 import PackageCard from "@/holidays/components/PackageCard";
 import PackageFilters from "@/holidays/components/PackageFilters";
 import { HOLIDAY_CATEGORIES } from "@/holidays/data/options";
-import { holidayListPromise } from "@/holidays/services/holidayCatalog";
+import { publishedPackagesPromise } from "@/services/packageService";
 import { EMPTY_FILTERS, filterHolidayPackages, holidayDestinations } from "@/holidays/services/filterPackages";
 import { Button } from "@/components/ui/button";
 
 export default function HolidayListPage() {
-  const packages = use(holidayListPromise());
+  const catalog = use(publishedPackagesPromise());
+  const packages = useMemo(() => catalog.packages || [], [catalog]);
   const destinations = useMemo(() => holidayDestinations(packages), [packages]);
   const [filters, setFilters] = useState(EMPTY_FILTERS);
   const visible = filterHolidayPackages(packages, filters);

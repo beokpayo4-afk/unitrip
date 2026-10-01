@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
 import { HolidayBookingContext } from "./bookingContext";
-import { getHolidayBooking, listHolidayBookings, saveHolidayBooking, saveHolidayEnquiry } from "../services/holidayBookings";
+import { notificationService } from "@/services/notificationService";
+import { packageService } from "@/services/packageService";
+import { getHolidayBooking, listHolidayBookings, saveHolidayEnquiry } from "../services/holidayBookings";
 import { quoteHoliday } from "../services/pricing";
 
 const DRAFT_KEY = "unitrip_holiday_draft";
@@ -34,7 +36,7 @@ export function HolidayBookingProvider({ children }) {
 
   async function confirmBooking() {
     if (!draft?.travelPackage || !fare) return null;
-    const saved = await saveHolidayBooking({
+    const saved = await packageService.createBooking({
       packageSlug: draft.travelPackage.slug,
       packageName: draft.travelPackage.name,
       destination: draft.travelPackage.destination,
@@ -52,6 +54,12 @@ export function HolidayBookingProvider({ children }) {
       status: "request_saved",
       statusLabel: "Request saved — departure not confirmed",
       departureConfirmed: false,
+    });
+    await notificationService.createBooking({
+      product: "holiday",
+      reference: saved.reference,
+      email: saved.email,
+      title: "Holiday request saved",
     });
     setBookings(listHolidayBookings());
     clearDraft();

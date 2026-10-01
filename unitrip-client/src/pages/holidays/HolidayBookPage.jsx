@@ -2,7 +2,7 @@ import { use, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useHolidayBooking } from "@/holidays/context/bookingContext";
 import { ROOM_PREFERENCES } from "@/holidays/data/options";
-import { holidayPackagePromise } from "@/holidays/services/holidayCatalog";
+import { packageDetailsPromise } from "@/services/packageService";
 import { localISODate } from "@/holidays/utils/dates";
 import { validateHolidayBooking } from "@/holidays/validation/booking";
 import { Button } from "@/components/ui/button";
@@ -39,7 +39,7 @@ function Field({ id, label, error, children }) {
 export default function HolidayBookPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const travelPackage = use(holidayPackagePromise(slug));
+  const travelPackage = use(packageDetailsPromise(slug));
   const { draft, setDraft } = useHolidayBooking();
   const [form, setForm] = useState(() =>
     draft?.travelPackage?.slug === slug ? draft : travelPackage ? emptyBooking(travelPackage) : null

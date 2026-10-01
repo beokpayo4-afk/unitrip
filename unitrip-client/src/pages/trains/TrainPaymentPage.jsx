@@ -4,12 +4,10 @@ import { useTrainBooking } from "@/trains/context/bookingContext";
 import { TrainPaymentPanel } from "@/trains/components/TrainPaymentPanel";
 import { TrainStepper } from "@/trains/components/TrainStepper";
 import { quoteTrain } from "@/trains/services/pricing";
-import { buildSampleBooking, saveTrainBooking } from "@/trains/services/trainBookings";
-import { trainPayment } from "@/trains/services/trainPayment";
 import { selectedJourney } from "@/trains/services/trainSearch";
 
 export default function TrainPaymentPage() {
-  const { draft } = useTrainBooking();
+  const { draft, completeBooking } = useTrainBooking();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
@@ -25,28 +23,12 @@ export default function TrainPaymentPage() {
   async function onContinue() {
     setBusy(true);
     setError("");
-    const payment = await trainPayment.startCheckout({
-      amount: fare.total,
-      currency: fare.currency,
-    });
-    const booking = buildSampleBooking({
-      payment,
-      search: draft.search,
-      train: { name: train.name, number: train.number, type: train.type },
-      journey: {
-        from: train.from.name,
-        to: train.to.name,
-        departure: train.from.departure,
-        arrival: train.to.arrival,
-        date: draft.search.journeyDate,
-        classCode: travelClass.code,
-        quota: draft.search.quota,
-      },
-      passengers: draft.passengers,
-      fare,
-    });
     try {
-      const saved = await saveTrainBooking(booking);
+      const saved = await completeBooking();
+      if (!saved) {
+        setBusy(false);
+        return;
+      }
       navigate(`/trains/confirmation/${saved.reference}`);
     } catch (err) {
       setError(err.message || "The booking was not saved.");
