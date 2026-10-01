@@ -17,8 +17,17 @@ function mongoTarget(uri) {
   }
 }
 
+function resolveMongoUri() {
+  let uri = (process.env.MONGO_URI || process.env.ATLAS_URI || "").trim();
+  const password = (process.env.MONGO_PASSWORD || "").trim();
+  if (uri.includes("<db_password>") && password) {
+    uri = uri.replaceAll("<db_password>", encodeURIComponent(password));
+  }
+  return uri;
+}
+
 export const connectDB = async () => {
-  const uri = (process.env.MONGO_URI || process.env.ATLAS_URI || "").trim();
+  const uri = resolveMongoUri();
   const target = uri ? mongoTarget(uri) : null;
 
   if (!uri) {
@@ -30,7 +39,7 @@ export const connectDB = async () => {
 
   if (target?.placeholderPassword) {
     logger.error(
-      "MONGO_URI still contains <db_password>. Replace it with the real Atlas password in the Render environment variables."
+      "MONGO_URI still contains <db_password>. In Render → Environment, replace <db_password> with the Atlas password, or add MONGO_PASSWORD. Do not commit the password; this GitHub repo is public."
     );
     process.exit(1);
   }
