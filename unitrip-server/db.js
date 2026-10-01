@@ -2,18 +2,20 @@ import mongoose from "mongoose";
 import logger from "./utils/logger.js";
 
 function mongoTarget(uri) {
+  // The Atlas template token is the raw "<db_password>" text. A real password
+  // with that same value is percent-encoded in the URI, so do not decode the
+  // password and compare it to the token.
+  const placeholderPassword = uri.includes("<db_password>");
   try {
     const parsed = new URL(uri.replace(/^mongodb(\+srv)?:\/\//, "https://"));
     return {
       user: decodeURIComponent(parsed.username || ""),
       host: parsed.hostname,
       db: parsed.pathname.replace(/^\//, "") || "(default)",
-      placeholderPassword:
-        parsed.password === "<db_password>" ||
-        decodeURIComponent(parsed.password || "") === "<db_password>",
+      placeholderPassword,
     };
   } catch {
-    return null;
+    return { placeholderPassword };
   }
 }
 
