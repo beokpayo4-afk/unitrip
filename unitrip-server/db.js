@@ -1,29 +1,41 @@
 import mongoose from "mongoose";
 import logger from "./utils/logger.js";
 
+/** Password text between the first userinfo colon and @, before URL decoding. */
+function rawPassword(uri) {
+  const withoutScheme = uri.replace(/^mongodb(?:\+srv)?:\/\//i, "");
+  const at = withoutScheme.indexOf("@");
+  if (at === -1) return "";
+  const userinfo = withoutScheme.slice(0, at);
+  const colon = userinfo.indexOf(":");
+  if (colon === -1) return "";
+  return userinfo.slice(colon + 1);
+}
+
 function mongoTarget(uri) {
-  // The Atlas template token is the raw "<db_password>" text. A real password
-  // with that same value is percent-encoded in the URI, so do not decode the
-  // password and compare it to the token.
-  const placeholderPassword = uri.includes("<db_password>");
   try {
     const parsed = new URL(uri.replace(/^mongodb(\+srv)?:\/\//, "https://"));
     return {
       user: decodeURIComponent(parsed.username || ""),
       host: parsed.hostname,
       db: parsed.pathname.replace(/^\//, "") || "(default)",
-      placeholderPassword,
+      // Compare the raw password only. URL parsing percent-encodes "<", so a
+      // real password of "<db_password>" (%3Cdb_password%3E) is not the template token.
+      placeholderPassword: rawPassword(uri) === "<db_password>",
     };
   } catch {
-    return { placeholderPassword };
+    return null;
   }
 }
 
 function resolveMongoUri() {
   let uri = (process.env.MONGO_URI || process.env.ATLAS_URI || "").trim();
   const password = (process.env.MONGO_PASSWORD || "").trim();
-  if (uri.includes("<db_password>") && password) {
-    uri = uri.replaceAll("<db_password>", encodeURIComponent(password));
+  if (password && rawPassword(uri) === "<db_password>") {
+    uri = uri.replace(
+      /^(mongodb(?:\+srv)?:\/\/[^:/?#]*:)<db_password>(@)/i,
+      `$1${encodeURIComponent(password)}$2`
+    );
   }
   return uri;
 }
@@ -39,7 +51,12 @@ export const connectDB = async () => {
     process.exit(1);
   }
 
-  if (target?.placeholderPassword) {
+  if (!target) {
+    logger.error("MONGO_URI is not a valid MongoDB connection string.");
+    process.exit(1);
+  }
+
+  if (target.placeholderPassword) {
     logger.error(
       "MONGO_URI still contains <db_password>. In Render → Environment, replace <db_password> with the Atlas password, or add MONGO_PASSWORD. Do not commit the password; this GitHub repo is public."
     );
@@ -49,9 +66,9 @@ export const connectDB = async () => {
   try {
     await mongoose.connect(uri);
     logger.info("Connected to MongoDB", {
-      host: target?.host,
-      db: target?.db,
-      user: target?.user,
+      host: target.host,
+      db: target.db,
+      user: target.user,
     });
   } catch (error) {
     const authFailed = /bad auth|authentication failed/i.test(error.message || "");
