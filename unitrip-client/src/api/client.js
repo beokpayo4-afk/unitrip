@@ -47,7 +47,12 @@ export const authApi = {
 };
 
 export const catalogApi = {
-  categories: () => api("/api/categories"),
+  categories: (params = {}) => {
+    const q = new URLSearchParams();
+    if (params.all) q.set("all", "1");
+    const search = q.toString();
+    return api(`/api/categories${search ? `?${search}` : ""}`);
+  },
   packages: (params = {}) => {
     const q = new URLSearchParams(params).toString();
     return api(`/api/packages${q ? `?${q}` : ""}`);

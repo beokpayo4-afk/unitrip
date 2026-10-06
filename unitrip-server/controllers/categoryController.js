@@ -4,9 +4,21 @@ import slugify from "../utils/slugify.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import { audit } from "../utils/audit.js";
 
+const HIDDEN_CATEGORY_SLUGS = new Set([
+  "air-tours",
+  "luxury-rail",
+  "water-sports",
+  "car-charters",
+  "attractions-tickets",
+]);
+
 export const listCategories = asyncHandler(async (req, res) => {
   const categories = await Category.find().sort({ name: 1 });
-  res.json(categories);
+  const visible =
+    req.query.all === "1"
+      ? categories
+      : categories.filter((category) => !HIDDEN_CATEGORY_SLUGS.has(category.slug));
+  res.json(visible);
 });
 
 export const getCategory = asyncHandler(async (req, res) => {

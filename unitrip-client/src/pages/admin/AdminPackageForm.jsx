@@ -101,7 +101,7 @@ export default function AdminPackageForm() {
   const isLast = tabIndex === TABS.length - 1;
 
   useEffect(() => {
-    catalogApi.categories().then(setCategories).catch(() => setCategories([]));
+    catalogApi.categories({ all: true }).then(setCategories).catch(() => setCategories([]));
   }, []);
 
   useEffect(() => {

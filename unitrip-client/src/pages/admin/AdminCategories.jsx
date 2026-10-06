@@ -46,7 +46,7 @@ export default function AdminCategories() {
   const [saving, setSaving] = useState(false);
 
   async function load() {
-    setCategories(await catalogApi.categories());
+    setCategories(await catalogApi.categories({ all: true }));
   }
 
   useEffect(() => {
