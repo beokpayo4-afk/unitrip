@@ -1,0 +1,7 @@
+{
+  "installCommand": "npm install --prefix unitrip-client",
+  "buildCommand": "npm run build --prefix unitrip-client",
+  "outputDirectory": "unitrip-client/dist",
+  "framework": "vite",
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+}

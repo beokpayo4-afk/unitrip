@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
+    "build:client": "npm install --prefix ../unitrip-client && npm run build --prefix ../unitrip-client",
     "dev": "nodemon index.js",
     "seed": "node seed.js",
     "seed:international": "node seed-international.js"

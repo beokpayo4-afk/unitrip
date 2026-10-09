@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
@@ -62,13 +63,21 @@ app.use(express.urlencoded({ extended: true }));
 app.use(requestLogger);
 app.use("/uploads", express.static(UPLOADS_ROOT));
 
-app.get("/", (req, res) => {
+const clientDist = path.resolve(__dirname, "../unitrip-client/dist");
+const clientIndex = path.join(clientDist, "index.html");
+const hasClient = fs.existsSync(clientIndex);
+
+function serverStatus(req, res) {
   res.status(200).json({
     message: "Unitrip Server is running",
     razorpay: Boolean(process.env.RAZORPAY_KEY_ID),
     cloudinary: Boolean(process.env.CLOUDINARY_CLOUD_NAME),
   });
-});
+}
+
+app.get("/api/health", serverStatus);
+if (!hasClient) app.get("/", serverStatus);
+if (hasClient) app.use(express.static(clientDist));
 
 app.use("/api/auth", authRoutes);
 app.use("/api/categories", categoryRoutes);
@@ -82,6 +91,15 @@ app.use("/api/trip-enquiries", tripEnquiryRoutes);
 app.use("/api/module-bookings", moduleBookingRoutes);
 app.use("/api/holiday-packages", holidayPackageRoutes);
 app.use("/api/integrations", integrationRoutes);
+
+if (hasClient) {
+  app.use((req, res, next) => {
+    if (req.method !== "GET" && req.method !== "HEAD") return next();
+    if (req.path.startsWith("/api") || req.path.startsWith("/uploads")) return next();
+    if (path.extname(req.path)) return next();
+    res.sendFile(clientIndex);
+  });
+}
 
 app.use(notFound);
 app.use(errorHandler);
