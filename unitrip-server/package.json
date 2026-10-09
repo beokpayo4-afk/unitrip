@@ -21,12 +21,19 @@
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.9.3",
-    "multer": "^2.2.0",
+    "multer": "^2.4.0",
     "pdfkit": "^0.19.1",
     "razorpay": "^2.9.8",
     "winston": "^3.19.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"
+  },
+  "overrides": {
+    "axios": "1.20.0",
+    "qs": "6.16.0",
+    "proxy-addr": "2.0.8",
+    "brace-expansion": "5.0.12",
+    "chokidar": "4.0.3"
   }
 }

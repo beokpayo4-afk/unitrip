@@ -29,6 +29,17 @@ function mongoTarget(uri) {
   }
 }
 
+function logConnectionError(error, target) {
+  const authFailed = /bad auth|authentication failed/i.test(error.message || "");
+  logger.error(
+    authFailed
+      ? `MongoDB rejected user "${target?.user || "unknown"}" on ${target?.host || "Atlas"}. Update MONGO_URI in Render with the Atlas password. The local .env file is not deployed.`
+      : "MongoDB connection failed",
+    { err: error.message, stack: error.stack }
+  );
+  process.exit(1);
+}
+
 function resolveMongoUri() {
   let uri = (process.env.MONGO_URI || process.env.ATLAS_URI || "").trim();
   const password = (process.env.MONGO_PASSWORD || "").trim();
@@ -65,31 +76,37 @@ export const connectDB = async () => {
   }
 
   try {
+    await mongoose.connect(uri);
+  } catch (error) {
+    const dnsFailed = /querySrv|queryTxt|ECONNREFUSED|ENOTFOUND|EAI_AGAIN|ETIMEOUT/i.test(
+      error.message || ""
+    );
+    if (!dnsFailed) {
+      logConnectionError(error, target);
+      return;
+    }
+
+    dns.setServers(["8.8.8.8", "1.1.1.1"]);
     try {
       await mongoose.connect(uri);
-    } catch (error) {
-      const dnsFailed = /querySrv|queryTxt|ECONNREFUSED|ENOTFOUND|EAI_AGAIN|ETIMEOUT/i.test(
-        error.message || ""
+    } catch (retryError) {
+      logger.error(
+        "MongoDB connection failed after retrying with public DNS (8.8.8.8, 1.1.1.1).",
+        {
+          err: retryError.message,
+          stack: retryError.stack,
+          firstError: error.message,
+        }
       );
-      if (!dnsFailed) throw error;
-      dns.setServers(["8.8.8.8", "1.1.1.1"]);
-      await mongoose.connect(uri);
+      process.exit(1);
     }
-    logger.info("Connected to MongoDB", {
-      host: target.host,
-      db: target.db,
-      user: target.user,
-    });
-  } catch (error) {
-    const authFailed = /bad auth|authentication failed/i.test(error.message || "");
-    logger.error(
-      authFailed
-        ? `MongoDB rejected user "${target?.user || "unknown"}" on ${target?.host || "Atlas"}. Update MONGO_URI in Render with the Atlas password. The local .env file is not deployed.`
-        : "MongoDB connection failed",
-      { err: error.message, stack: error.stack }
-    );
-    process.exit(1);
   }
+
+  logger.info("Connected to MongoDB", {
+    host: target.host,
+    db: target.db,
+    user: target.user,
+  });
 };
 
 export default connectDB;
