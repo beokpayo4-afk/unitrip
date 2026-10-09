@@ -1,3 +1,4 @@
+import dns from "dns";
 import mongoose from "mongoose";
 import logger from "./utils/logger.js";
 
@@ -64,7 +65,16 @@ export const connectDB = async () => {
   }
 
   try {
-    await mongoose.connect(uri);
+    try {
+      await mongoose.connect(uri);
+    } catch (error) {
+      const dnsFailed = /querySrv|queryTxt|ECONNREFUSED|ENOTFOUND|EAI_AGAIN|ETIMEOUT/i.test(
+        error.message || ""
+      );
+      if (!dnsFailed) throw error;
+      dns.setServers(["8.8.8.8", "1.1.1.1"]);
+      await mongoose.connect(uri);
+    }
     logger.info("Connected to MongoDB", {
       host: target.host,
       db: target.db,
