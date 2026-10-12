@@ -11,7 +11,9 @@ import Register from "@/pages/Register";
 import MyBookings from "@/pages/MyBookings";
 import About from "@/pages/About";
 import Contact from "@/pages/Contact";
-import LegalPage from "@/pages/LegalPage";
+import Privacy from "@/pages/Privacy";
+import Terms from "@/pages/Terms";
+import Refunds from "@/pages/Refunds";
 import AdminLayout from "@/pages/admin/AdminLayout";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
 import AdminPackages from "@/pages/admin/AdminPackages";
@@ -127,9 +129,9 @@ export default function App() {
         <Route path="my-bookings" element={<MyBookings />} />
         <Route path="about" element={<About />} />
         <Route path="contact" element={<Contact />} />
-        <Route path="privacy" element={<LegalPage title="Privacy Policy" />} />
-        <Route path="terms" element={<LegalPage title="Terms & Conditions" />} />
-        <Route path="refunds" element={<LegalPage title="Refund & Cancellation" />} />
+        <Route path="privacy" element={<Privacy />} />
+        <Route path="terms" element={<Terms />} />
+        <Route path="refunds" element={<Refunds />} />
       </Route>
 
       <Route path="admin" element={<AdminLayout />}>

@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-export default function LegalPage({ title }) {
+export default function LegalPage({ title, children }) {
   return (
     <div className="container-page max-w-3xl py-12">
       <h1 className="font-display text-4xl font-bold">{title}</h1>
@@ -8,11 +8,13 @@ export default function LegalPage({ title }) {
         <CardHeader>
           <CardTitle>{title}</CardTitle>
         </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">
-            This policy page is a placeholder for UNITRIP TRAVELS PRIVATE LIMITED. Final legal copy
-            will be published before public launch.
-          </p>
+        <CardContent className="space-y-4 text-sm text-muted-foreground">
+          {children || (
+            <p>
+              This policy page is a placeholder for UNITRIP TRAVELS PRIVATE LIMITED. Final legal copy
+              will be published before public launch.
+            </p>
+          )}
         </CardContent>
       </Card>
     </div>
